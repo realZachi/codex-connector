@@ -1,0 +1,74 @@
+{
+  "name": "codex-connector",
+  "version": "0.1.0",
+  "description": "Let your users bring their own ChatGPT Codex plan to your web app through a restricted localhost bridge.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "bin": {
+    "codex-connector": "./bin/cli.mjs"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./vite": {
+      "types": "./dist/vite/index.d.ts",
+      "default": "./dist/vite/index.js"
+    },
+    "./bridge": "./bridge/codex-connector-bridge.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "bin",
+    "bridge",
+    "dist",
+    "README.md",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "check": "bun run typecheck && bun run test && bun run build"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "vite": ">=5"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.2",
+    "react": "19.2.0",
+    "typescript": "5.9.3",
+    "vite": "7.1.9",
+    "vitest": "3.2.4"
+  },
+  "keywords": [
+    "codex",
+    "chatgpt",
+    "openai",
+    "app-server",
+    "byok",
+    "bring-your-own-plan",
+    "localhost-bridge"
+  ]
+}
