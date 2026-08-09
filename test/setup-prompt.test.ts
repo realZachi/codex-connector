@@ -47,11 +47,25 @@ describe('setup prompt', () => {
     expect(prompt).toContain('Do not rewrite the URL to HTTPS')
   })
 
+  it('pipes the token into stdin instead of argv', () => {
+    const prompt = buildSetupPrompt(options)
+    expect(prompt).toContain(`printf '%s\\n' "<PAIRING_TOKEN>" |`)
+    expect(prompt).toContain('--pairing-token-stdin')
+    expect(prompt).not.toContain('--pairing-token <PAIRING_TOKEN>')
+  })
+
+  it('tells the agent not to echo the token', () => {
+    const prompt = buildSetupPrompt(options)
+    expect(prompt).toContain('do not echo the token')
+  })
+
   it('asks for a checksum when one is supplied', async () => {
     const digest = await computeBridgeSha256('bridge source')
     const prompt = buildSetupPrompt({ ...options, bridgeSha256: digest })
     expect(prompt).toContain(`shasum -a 256`)
     expect(prompt).toContain(digest)
+    expect(prompt).toContain('stop and report the mismatch')
+    expect(prompt).not.toContain('delete')
   })
 
   it('falls back to a manual review when no checksum is supplied', () => {

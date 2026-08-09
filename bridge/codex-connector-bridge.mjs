@@ -15,7 +15,8 @@
 //     Codex App Server owns authentication
 //
 // Commands:
-//   start --pairing-token <t> --allowed-origin <o> --service-id <id> [--service-name <name>]
+//   start --pairing-token-stdin --allowed-origin <o> --service-id <id> [--service-name <name>]
+//         (or --pairing-token <t>, but stdin is preferred: argv is visible in ps)
 //   serve  --service-id <id>
 //   stop   --service-id <id>
 
@@ -123,6 +124,29 @@ const readFlag = (args, flag) => {
   return args[index + 1] ?? null
 }
 
+export const assertPairingToken = (value) => {
+  if (typeof value !== 'string' || !PAIRING_TOKEN_PATTERN.test(value)) {
+    throw new Error('The pairing token is missing or invalid')
+  }
+  return value
+}
+
+/**
+ * Reads the token from the first line of stdin. Preferred over the argv flag: a
+ * token in argv is visible in `ps` for as long as the bridge runs.
+ */
+const readPairingTokenFromStdin = async () => {
+  const lines = createInterface({ input: process.stdin })
+  try {
+    for await (const line of lines) return line.trim()
+  } finally {
+    lines.close()
+  }
+  throw new Error(
+    'No pairing token arrived on stdin. Pipe it in, for example: printf \'%s\\n\' "$TOKEN" | ... start --pairing-token-stdin ...',
+  )
+}
+
 export const parseBridgeCommand = (args) => {
   const [command = 'help'] = args
   if (command !== 'serve' && command !== 'stop' && command !== 'start') return { type: 'help' }
@@ -131,18 +155,23 @@ export const parseBridgeCommand = (args) => {
   if (!isValidServiceId(serviceId)) throw new Error('The --service-id value is missing or invalid')
   if (command === 'serve' || command === 'stop') return { type: command, serviceId }
 
+  const wantsStdinToken = args.includes('--pairing-token-stdin')
   const pairingToken = readFlag(args, '--pairing-token')
   const allowedOriginValue = readFlag(args, '--allowed-origin')
   const allowedOrigin = allowedOriginValue ? normalizeOrigin(allowedOriginValue) : null
   const serviceNameValue = readFlag(args, '--service-name')
-  if (!pairingToken || !PAIRING_TOKEN_PATTERN.test(pairingToken)) {
-    throw new Error('The --pairing-token value is missing or invalid')
+  if (!wantsStdinToken && (!pairingToken || !PAIRING_TOKEN_PATTERN.test(pairingToken))) {
+    throw new Error(
+      'Provide the pairing token with --pairing-token-stdin (preferred) or --pairing-token <token>',
+    )
   }
   if (!allowedOrigin) throw new Error('The --allowed-origin value is missing or invalid')
   return {
     type: 'start',
     serviceId,
-    pairingToken,
+    // Resolved from stdin in main() so it never appears in argv.
+    pairingToken: wantsStdinToken ? null : pairingToken,
+    readTokenFromStdin: wantsStdinToken,
     allowedOrigin,
     serviceName: typeof serviceNameValue === 'string' && serviceNameValue.trim()
       ? serviceNameValue.trim().slice(0, 60)
@@ -636,12 +665,15 @@ const waitUntilReady = async (serviceId) => {
 }
 
 const startDetachedBridge = async (command) => {
+  const pairingToken = command.readTokenFromStdin
+    ? assertPairingToken(await readPairingTokenFromStdin())
+    : command.pairingToken
   const existingConfig = await readConfig(command.serviceId)
   const config = {
     version: BRIDGE_PROTOCOL_VERSION,
     serviceId: command.serviceId,
     serviceName: command.serviceName,
-    pairingToken: command.pairingToken,
+    pairingToken,
     allowedOrigin: command.allowedOrigin,
     controlSecret: existingConfig?.controlSecret ?? randomBytes(32).toString('hex'),
   }

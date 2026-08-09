@@ -40,7 +40,7 @@ const integrityStep = (options: SetupPromptOptions): string => {
   if (!options.bridgeSha256) {
     return `Read the downloaded file before running it. Confirm that it binds only to 127.0.0.1, never reads \`~/.codex/auth.json\`, and starts \`codex app-server\` over stdio. Stop if any of that is untrue.`
   }
-  return `Verify the download before running it: \`shasum -a 256 ${bridgeInstallPath(options.connection.serviceId)}\` must print \`${options.bridgeSha256}\`. If it does not match, delete the file and stop. Then read it and confirm that it binds only to 127.0.0.1, never reads \`~/.codex/auth.json\`, and starts \`codex app-server\` over stdio.`
+  return `Verify the download before running it: \`shasum -a 256 ${bridgeInstallPath(options.connection.serviceId)}\` must print \`${options.bridgeSha256}\`. If it does not match, stop and report the mismatch without running the file. Then read it and confirm that it binds only to 127.0.0.1, never reads \`~/.codex/auth.json\`, and starts \`codex app-server\` over stdio.`
 }
 
 /**
@@ -64,10 +64,10 @@ Please do the following:
 1. Confirm that \`codex\` is available and choose an installed JavaScript runtime: use \`node\` when available, otherwise \`bun\`. Store that command as <RUNTIME>. If neither exists, explain that requirement and stop instead of installing one silently.
 2. ${downloadInstruction(options)}
 3. ${integrityStep(options)}
-4. Run this command with the selected runtime, substituting the exact values above and without printing the pairing token again:
-   \`<RUNTIME> ${installPath} start --pairing-token <PAIRING_TOKEN> --allowed-origin ${connection.appOrigin} --service-id ${connection.serviceId} --service-name "${options.appName.replace(/"/g, '')}"\`
-5. The command must run without sudo, store its config with user-only permissions, and start the connector as a detached user process.
-6. Confirm the connector answers on one of http://127.0.0.1:${ports[0] ?? 0}/v1/hello or the next three ports, then tell me to return to ${options.appName} and click “Check connection”.
+4. Run this command with the selected runtime. The pairing token must be piped into stdin so it never appears in argv (visible in \`ps\`). Substitute <RUNTIME> and the other placeholders exactly, and do not echo the token:
+   \`printf '%s\\n' "<PAIRING_TOKEN>" | <RUNTIME> ${installPath} start --pairing-token-stdin --allowed-origin ${connection.appOrigin} --service-id ${connection.serviceId} --service-name "${options.appName.replace(/"/g, '')}"\`
+5. The connector must start as a detached user process and store its config with user-only permissions (0600 for files, 0700 for directories).
+6. Confirm the connector answers on one of http://127.0.0.1:${ports[0] ?? 0}/v1/hello or the next three ports, then tell me to return to ${options.appName} and click "Check connection".
 ${extra ? `7. ${extra}\n` : ''}
 Do not copy, print or inspect ChatGPT/Codex access tokens. The local Codex App Server manages authentication itself. This connector only serves ${connection.appOrigin} and only exposes a fixed allowlist of Codex methods inside an empty read-only workspace.`
 }

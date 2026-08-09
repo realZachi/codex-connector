@@ -42,19 +42,29 @@ export const codexConnector = (options: CodexConnectorPluginOptions = {}): Plugi
   const defineName = options.defineSha256As === false
     ? null
     : options.defineSha256As ?? '__CODEX_BRIDGE_SHA256__'
-  let source: string | null = null
-  const loadSource = async () => {
-    source ??= await readBridgeSource()
-    return source
+  // Cache only across a production build. In serve mode the middleware re-reads
+  // the file every request so bridge edits are picked up without a restart.
+  let buildSource: string | null = null
+  let isBuild = false
+  const loadSource = async (force = false) => {
+    if (!force && buildSource !== null) return buildSource
+    const next = await readBridgeSource()
+    if (isBuild) buildSource = next
+    return next
   }
 
   return {
     name: 'codex-connector',
     async config() {
       if (!defineName) return {}
-      return { define: { [defineName]: JSON.stringify(bridgeSha256(await loadSource())) } }
+      return { define: { [defineName]: JSON.stringify(bridgeSha256(await readBridgeSource())) } }
+    },
+    configResolved(resolved) {
+      isBuild = resolved.command === 'build'
     },
     async buildStart() {
+      // emitFile() does not exist in serve mode; dev is handled by the middleware.
+      if (!isBuild) return
       this.emitFile({
         type: 'asset',
         fileName: assetPath.slice(1),
@@ -63,7 +73,7 @@ export const codexConnector = (options: CodexConnectorPluginOptions = {}): Plugi
     },
     configureServer(server) {
       server.middlewares.use(assetPath, (_request, response) => {
-        void loadSource().then((bridge) => {
+        void loadSource(true).then((bridge) => {
           response.setHeader('Content-Type', 'text/javascript; charset=utf-8')
           response.setHeader('Cache-Control', 'no-store')
           response.end(bridge)

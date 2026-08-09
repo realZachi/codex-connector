@@ -45,6 +45,7 @@ describe('vite plugin', () => {
   it('emits the bridge as an asset at the default path', async () => {
     const emitted: { fileName?: string; source?: unknown }[] = []
     const plugin = codexConnector()
+    ;(plugin.configResolved as (c: { command: string }) => void)({ command: 'build' })
     await (plugin.buildStart as unknown as (this: {
       emitFile: (file: { fileName?: string; source?: unknown }) => void
     }) => Promise<void>).call({ emitFile: (file) => emitted.push(file) })
@@ -53,9 +54,20 @@ describe('vite plugin', () => {
     expect(DEFAULT_BRIDGE_ASSET_PATH).toBe('/codex/codex-connector-bridge.mjs')
   })
 
+  it('does not emit an asset in serve mode, where emitFile is unavailable', async () => {
+    const emitted: unknown[] = []
+    const plugin = codexConnector()
+    ;(plugin.configResolved as (c: { command: string }) => void)({ command: 'serve' })
+    await (plugin.buildStart as unknown as (this: {
+      emitFile: (file: unknown) => void
+    }) => Promise<void>).call({ emitFile: (file) => emitted.push(file) })
+    expect(emitted).toEqual([])
+  })
+
   it('honours a custom path and rejects a relative one', async () => {
     const emitted: { fileName?: string }[] = []
     const plugin = codexConnector({ path: '/static/bridge.mjs' })
+    ;(plugin.configResolved as (c: { command: string }) => void)({ command: 'build' })
     await (plugin.buildStart as unknown as (this: {
       emitFile: (file: { fileName?: string }) => void
     }) => Promise<void>).call({ emitFile: (file) => emitted.push(file) })

@@ -91,7 +91,27 @@ describe('bridge RPC restriction', () => {
 })
 
 describe('bridge command parsing', () => {
-  it('parses a start command', () => {
+  it('parses a start command with stdin token flag', () => {
+    expect(bridge.parseBridgeCommand([
+      'start',
+      '--pairing-token-stdin',
+      '--service-id',
+      'my-app',
+      '--allowed-origin',
+      'https://my.app',
+      '--service-name',
+      'My App',
+    ])).toEqual({
+      type: 'start',
+      serviceId: 'my-app',
+      pairingToken: null,
+      readTokenFromStdin: true,
+      allowedOrigin: 'https://my.app',
+      serviceName: 'My App',
+    })
+  })
+
+  it('parses a start command with argv token (for compatibility)', () => {
     expect(bridge.parseBridgeCommand([
       'start',
       '--pairing-token', validToken,
@@ -103,6 +123,7 @@ describe('bridge command parsing', () => {
       serviceId: 'acme-studio',
       serviceName: 'Acme Studio',
       pairingToken: validToken,
+      readTokenFromStdin: false,
       allowedOrigin: 'https://acme.example',
     })
   })
