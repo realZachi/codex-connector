@@ -22,9 +22,29 @@
       "types": "./dist/react/index.d.ts",
       "default": "./dist/react/index.js"
     },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "default": "./dist/vue/index.js"
+    },
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "default": "./dist/svelte/index.js"
+    },
+    "./solid": {
+      "types": "./dist/solid/index.d.ts",
+      "default": "./dist/solid/index.js"
+    },
     "./vite": {
       "types": "./dist/vite/index.d.ts",
       "default": "./dist/vite/index.js"
+    },
+    "./next": {
+      "types": "./dist/next/index.d.ts",
+      "default": "./dist/next/index.js"
+    },
+    "./nuxt": {
+      "types": "./dist/nuxt/index.d.ts",
+      "default": "./dist/nuxt/index.js"
     },
     "./bridge": "./bridge/codex-connector-bridge.mjs",
     "./package.json": "./package.json"
@@ -33,34 +53,69 @@
     "bin",
     "bridge",
     "dist",
+    "docs/recipes",
     "README.md",
     "SECURITY.md"
   ],
   "scripts": {
+    "generate:bridge-metadata": "node scripts/bridge-metadata.mjs generate",
+    "verify:bridge-metadata": "node scripts/bridge-metadata.mjs verify",
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "check": "bun run typecheck && bun run test && bun run build"
+    "test:compat:static": "vitest run --config vitest.compat.config.ts",
+    "test:compat:full": "bun run build && node scripts/compat-runner.mjs all",
+    "test:compat:job": "node scripts/compat-runner.mjs",
+    "test:compat": "bun run test:compat:static && bun run test:compat:full",
+    "check": "bun run verify:bridge-metadata && bun run typecheck && bun run test && bun run build"
   },
   "peerDependencies": {
+    "next": ">=15 <17",
+    "nuxt": ">=3.5 <5",
     "react": ">=18",
-    "vite": ">=5"
+    "solid-js": ">=1.8 <2",
+    "svelte": ">=4 <6",
+    "vite": ">=5",
+    "vue": ">=3 <4"
   },
   "peerDependenciesMeta": {
+    "next": {
+      "optional": true
+    },
+    "nuxt": {
+      "optional": true
+    },
     "react": {
+      "optional": true
+    },
+    "solid-js": {
+      "optional": true
+    },
+    "svelte": {
       "optional": true
     },
     "vite": {
       "optional": true
+    },
+    "vue": {
+      "optional": true
     }
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.0",
     "@types/node": "24.10.1",
     "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "next": "16.3.0",
+    "nuxt": "4.5.2",
     "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "solid-js": "1.9.5",
+    "svelte": "5.28.0",
     "typescript": "5.9.3",
     "vite": "7.1.9",
-    "vitest": "3.2.4"
+    "vitest": "3.2.4",
+    "vue": "3.5.13"
   },
   "keywords": [
     "codex",

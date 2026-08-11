@@ -1,0 +1,106 @@
+name: compat
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: compat-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: package gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun run test:compat:static
+
+  adapters:
+    name: adapter / ${{ matrix.framework }} ${{ matrix.major }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { framework: vite, major: 7 }
+          - { framework: vite, major: 8 }
+          - { framework: next, major: 15 }
+          - { framework: next, major: 16 }
+          - { framework: nuxt, major: 3 }
+          - { framework: nuxt, major: 4 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: node scripts/compat-runner.mjs adapter ${{ matrix.framework }} ${{ matrix.major }}
+
+  bindings:
+    name: binding / ${{ matrix.framework }} ${{ matrix.major }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { framework: react, major: 18 }
+          - { framework: react, major: 19 }
+          - { framework: vue, major: 3 }
+          - { framework: svelte, major: 4 }
+          - { framework: svelte, major: 5 }
+          - { framework: solid, major: 1 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: node scripts/compat-runner.mjs binding ${{ matrix.framework }} ${{ matrix.major }}
+
+  recipes:
+    name: recipe / ${{ matrix.framework }} ${{ matrix.major }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { framework: astro, major: 7 }
+          - { framework: sveltekit, major: 2 }
+          - { framework: react-router, major: 8 }
+          - { framework: solid-start, major: 2 }
+          - { framework: qwik, major: 1 }
+          - { framework: angular, major: 22 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.9
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: node scripts/compat-runner.mjs recipe ${{ matrix.framework }} ${{ matrix.major }}

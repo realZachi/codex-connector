@@ -1,0 +1,8 @@
+.tmp/
+**/node_modules/
+**/.astro/
+**/.output/
+**/dist/
+**/.angular/
+**/.vercel/
+**/.netlify/

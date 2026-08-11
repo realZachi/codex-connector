@@ -1,0 +1,16 @@
+{
+  "name": "codex-connector-recipe-sveltekit",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@sveltejs/adapter-static": "^3.0.0",
+    "@sveltejs/kit": "^2.0.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "codex-connector": "file:../../../..",
+    "svelte": "^5.0.0",
+    "vite": "^8.0.0"
+  }
+}

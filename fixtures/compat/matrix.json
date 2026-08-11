@@ -1,0 +1,22 @@
+{
+  "adapters": [
+    { "id": "vite", "majors": [7, 8], "export": "codex-connector/vite", "symbol": "codexConnector" },
+    { "id": "next", "majors": [15, 16], "export": "codex-connector/next", "symbol": "withCodexConnector" },
+    { "id": "nuxt", "majors": [3, 4], "export": "codex-connector/nuxt", "symbol": "default" }
+  ],
+  "bindings": [
+    { "id": "react", "majors": [18, 19], "export": "codex-connector/react", "symbol": "useCodexConnector" },
+    { "id": "vue", "majors": [3], "export": "codex-connector/vue", "symbol": "useCodexConnector" },
+    { "id": "svelte", "majors": [4, 5], "export": "codex-connector/svelte", "symbol": "createCodexConnectorStore" },
+    { "id": "solid", "majors": [1], "export": "codex-connector/solid", "symbol": "createCodexConnector" }
+  ],
+  "recipes": [
+    { "id": "astro", "major": 7, "doc": "docs/recipes/astro.md", "fixture": "fixtures/compat/recipes/astro" },
+    { "id": "sveltekit", "major": 2, "doc": "docs/recipes/sveltekit.md", "fixture": "fixtures/compat/recipes/sveltekit" },
+    { "id": "react-router", "major": 8, "doc": "docs/recipes/react-router.md", "fixture": "fixtures/compat/recipes/react-router" },
+    { "id": "solid-start", "major": 2, "doc": "docs/recipes/solid-start.md", "fixture": "fixtures/compat/recipes/solid-start" },
+    { "id": "qwik", "major": 1, "doc": "docs/recipes/qwik.md", "fixture": "fixtures/compat/recipes/qwik" },
+    { "id": "angular", "major": 22, "doc": "docs/recipes/angular.md", "fixture": "fixtures/compat/recipes/angular" }
+  ],
+  "bridgeAssetPath": "/codex/codex-connector-bridge.mjs"
+}

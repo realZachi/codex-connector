@@ -1,0 +1,11 @@
+---
+import { resolveBridgeConfig } from 'codex-connector'
+
+const bridge = resolveBridgeConfig()
+---
+
+<!doctype html>
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Astro compatibility smoke</title></head>
+  <body data-bridge-path={bridge.bridgePath}>Astro compatibility smoke</body>
+</html>

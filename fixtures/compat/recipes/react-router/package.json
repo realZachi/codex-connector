@@ -1,0 +1,17 @@
+{
+  "name": "codex-connector-recipe-react-router",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "react-router build"
+  },
+  "dependencies": {
+    "@react-router/dev": "^8.0.0",
+    "@react-router/node": "^8.0.0",
+    "codex-connector": "file:../../../..",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router": "^8.0.0",
+    "vite": "^8.0.0"
+  }
+}

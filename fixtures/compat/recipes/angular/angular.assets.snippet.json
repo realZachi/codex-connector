@@ -1,0 +1,5 @@
+{
+  "glob": "**/*",
+  "input": "public/codex",
+  "output": "/codex"
+}
