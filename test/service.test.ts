@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error -- the bridge ships as reviewable JavaScript without types.
 import * as bridge from '../bridge/codex-connector-bridge.mjs'
 import {
   PORT_RANGE_SPAN,

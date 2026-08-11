@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest'
-// @ts-expect-error -- the bridge ships as reviewable JavaScript without types.
 import * as bridge from '../bridge/codex-connector-bridge.mjs'
 
 const validToken = 'a'.repeat(43)
@@ -135,6 +134,8 @@ describe('bridge command parsing', () => {
       '--allowed-origin', 'https://acme.example',
       '--service-id', 'acme-studio',
     ])
+    expect(command.type).toBe('start')
+    if (command.type !== 'start') throw new Error('Expected a start command')
     expect(command.serviceName).toBe('acme-studio')
   })
 
