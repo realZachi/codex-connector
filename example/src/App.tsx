@@ -29,8 +29,6 @@ export const App = () => {
   } = useCodexConnector({
     serviceId: SERVICE_ID,
     appName: APP_NAME,
-    // In your own app: bridgeSha256: __CODEX_BRIDGE_SHA256__
-    bridgeSha256: __CODEX_BRIDGE_SHA256__,
   })
 
   const [models, setModels] = useState<CodexModel[]>([])

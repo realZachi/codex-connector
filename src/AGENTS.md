@@ -4,7 +4,8 @@
 
 Core TypeScript library for pairing, connection status, model listing, and
 tool-enabled turns against the local bridge. Entry: `createCodexConnector` in
-`connector.ts`. Public barrel: `index.ts`.
+`connector.ts`. Public barrel: `index.ts`. Reactive store:
+`createCodexConnectorController` in `controller.ts`.
 
 ## Setup & Run
 
@@ -13,6 +14,7 @@ tool-enabled turns against the local bridge. Entry: `createCodexConnector` in
 bun run typecheck
 bun run test
 bun run build          # emits dist/ via tsconfig.build.json
+bun run generate:bridge-metadata   # after editing the bridge file
 ```
 
 Consumers import from `codex-connector` (built `dist/`). The example aliases to
@@ -25,6 +27,9 @@ this `src/` tree for zero-build iteration.
 | Concern | File |
 | --- | --- |
 | Public API / facade | `connector.ts` |
+| Bridge path/hash resolve | `bridge-resolve.ts` |
+| Bundled digest | `bridge-metadata.generated.ts` |
+| Reactive controller | `controller.ts` |
 | HTTP + JSON-RPC client | `client.ts` |
 | Pairing + localStorage | `connection.ts` |
 | serviceId / ports | `service.ts` |
@@ -33,13 +38,16 @@ this `src/` tree for zero-build iteration.
 | Models | `models.ts` |
 | Turns + events | `run.ts` |
 | Browser-side tools | `tools.ts` |
-| React hook | `react/index.ts` |
-| Vite plugin (Node) | `vite/index.ts` |
+| Node asset helpers | `node/bridge-assets.ts` |
+| React / Vue / Svelte / Solid | `react/`, `vue/`, `svelte/`, `solid/` |
+| Vite / Next / Nuxt (Node) | `vite/`, `next/`, `nuxt/` |
 
 ### DO / DON'T
 
 - DO: Keep the high-level flow in `connector.ts` and push protocol details down
   (`client.ts`, `run.ts`). Mirror status handling from `ConnectorStatus` there.
+- DO: Resolve bridge path/hash only via `resolveBridgeConfig` (explicit → adapter
+  inject → default + `BUNDLED_BRIDGE_SHA256`).
 - DO: Validate `serviceId` with `assertValidServiceId` (`service.ts`) —
   lowercase, digits, dashes, 3–40 chars (`acme-studio`).
 - DO: Derive ports with `serviceCandidatePorts` — must stay identical to the
@@ -49,25 +57,30 @@ this `src/` tree for zero-build iteration.
 - DO: Use `type` imports for types (`import type { ... }`) with
   `verbatimModuleSyntax`.
 - DON'T: Import Node builtins (`fs`, `crypto`, `path`) from browser modules —
-  only `vite/index.ts` / build tooling may.
+  only `vite/`, `next/`, `nuxt/`, `node/`, or `bin/` may.
 - DON'T: Hard-code model ids in product code; call `listModels()` and filter
   (see README).
 - DON'T: Widen turn sandbox or tools to grant shell/filesystem/network — tools
   run in the **browser** only (`tools.ts`).
+- DON'T: Reimplement revision guards in UI bindings — use the controller.
 
-### React (`react/index.ts`)
+### Controller (`controller.ts`)
 
-- Thin state wrapper over `createCodexConnector`.
-- Expose `status`, `setup`, `createSetup`, `checkConnection`, `disconnect`.
-- Use a revision counter so stale `checkConnection` results do not overwrite UI.
-- Example UI (bring-your-own): `example/src/ConnectPanel.tsx`.
+- Snapshot: `status`, `setup`, `isConnected`, `isChecking`.
+- Actions: `createSetup`, `checkConnection`, `disconnect` + `connector`.
+- First client `subscribe` starts the auto-check; `getServerSnapshot` is inert.
 
-### Vite (`vite/index.ts`)
+### UI bindings
 
-- Serves `/codex/codex-connector-bridge.mjs` in dev (no-store) and emits it on build.
-- Defines `__CODEX_BRIDGE_SHA256__` by default (`defineSha256As`).
-- Resolve bridge via package export, with source fallback for this repo
-  (`resolveBridgePath`).
+- React: thin `useSyncExternalStore` over the controller; public API unchanged.
+- Vue / Svelte / Solid: same snapshot + actions, framework-native reactivity.
+
+### Build adapters
+
+- Share `src/node/bridge-assets.ts` for resolve/hash/write/path join.
+- Vite/Nuxt inject `__CODEX_BRIDGE_*`; Next injects the allowed
+  `NEXT_PUBLIC_CODEX_BRIDGE_*` equivalents. The browser core reads both.
+- Never serve the bridge from a foreign CDN origin.
 
 ## Key Files
 
@@ -81,10 +94,10 @@ this `src/` tree for zero-build iteration.
 
 ```bash
 rg -n "export (const|type|async function|function)" .
-rg -n "ConnectorStatus|SetupInstructions" .
+rg -n "ConnectorStatus|SetupInstructions|createCodexConnectorController" .
 rg -n "localStorage|pairingToken" connection.ts
 rg -n "onEvent|tool-call|reasoning-delta" run.ts
-rg -n "codexConnector|bridgeSha256|emitFile" vite
+rg -n "codexConnector|withCodexConnector|bridgeSha256|emitFile" vite next nuxt
 ```
 
 ## Common Gotchas
@@ -95,6 +108,7 @@ rg -n "codexConnector|bridgeSha256|emitFile" vite
   `BRIDGE_PROTOCOL_VERSION` in the bridge.
 - Changing port hashing or `SERVICE_ID_PATTERN` requires a matching bridge change
   and tests on both sides.
+- After editing the bridge file, run `bun run generate:bridge-metadata`.
 
 ## Pre-PR Checks
 

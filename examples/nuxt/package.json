@@ -1,0 +1,14 @@
+{
+  "name": "codex-connector-example-nuxt",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev --host 127.0.0.1 --port 4182",
+    "build": "nuxt build",
+    "preview": "nuxt preview --host 127.0.0.1 --port 4182"
+  },
+  "dependencies": {
+    "nuxt": "4.5.2",
+    "vue": "3.5.41"
+  }
+}

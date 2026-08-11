@@ -10,6 +10,9 @@ on your side, and no prompt or user data passing through your servers.
 bun add codex-connector   # or npm / pnpm
 ```
 
+With a first-class adapter you only configure `serviceId` and `appName`. Bridge
+path and SHA-256 are injected automatically.
+
 ## How it works
 
 The Codex CLI ships a local **App Server** that speaks JSON-RPC and owns the
@@ -27,14 +30,12 @@ your website  ──HTTPS──▶  (nothing AI-related on your server)
 The user never copies a token into your site. They run one prompt in ChatGPT,
 Codex sets the bridge up, and they come back and click *Check connection*.
 
-## Setup for developers
+## Quickstarts
 
-### 1. Serve the bridge from your own origin
+Pick your bundler, then a UI binding. Every adapter serves the bridge from **your**
+origin and wires integrity into the browser core.
 
-The setup prompt tells Codex to download the bridge from **your** HTTPS origin, so
-the user never fetches code from a third party.
-
-With Vite:
+### Vite
 
 ```ts
 // vite.config.ts
@@ -46,32 +47,73 @@ export default defineConfig({
 })
 ```
 
-That serves `/codex/codex-connector-bridge.mjs` in dev and build, and defines
-`__CODEX_BRIDGE_SHA256__` with its checksum.
+```ts
+import { createCodexConnector } from 'codex-connector'
 
-Without Vite, copy the file into your static directory:
-
-```bash
-bunx codex-connector eject --out public/codex
-# prints the SHA-256 to pass as bridgeSha256
+export const codex = createCodexConnector({
+  serviceId: 'acme-studio',
+  appName: 'Acme Studio',
+})
 ```
 
-### 2. Create a connector
+### Next.js
+
+```ts
+// next.config.ts
+import type { NextConfig } from 'next'
+import { withCodexConnector } from 'codex-connector/next'
+
+const nextConfig: NextConfig = {
+  // your options
+}
+
+export default withCodexConnector(nextConfig)
+```
 
 ```ts
 import { createCodexConnector } from 'codex-connector'
 
 export const codex = createCodexConnector({
-  serviceId: 'acme-studio',   // stable, lowercase; scopes port + storage
-  appName: 'Acme Studio',     // shown to the user inside ChatGPT
-  bridgeSha256: __CODEX_BRIDGE_SHA256__,  // optional but recommended
+  serviceId: 'acme-studio',
+  appName: 'Acme Studio',
 })
 ```
 
-`serviceId` is what keeps two connector-enabled sites apart: each gets its own
-bridge process, its own port, its own config directory and its own pairing token.
+`basePath` is folded into the served bridge URL. With `output: 'standalone'`,
+copy Next's `public/` folder into the deployment as usual so
+`/codex/codex-connector-bridge.mjs` stays available.
 
-### 3. Let the user connect
+### Nuxt
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['codex-connector/nuxt'],
+})
+```
+
+```ts
+import { createCodexConnector } from 'codex-connector'
+
+export const codex = createCodexConnector({
+  serviceId: 'acme-studio',
+  appName: 'Acme Studio',
+})
+```
+
+`app.baseURL` is applied to the bridge path automatically.
+
+### UI bindings
+
+| Framework | Import | API |
+| --- | --- | --- |
+| React | `codex-connector/react` | `useCodexConnector(config)` |
+| Vue | `codex-connector/vue` | `useCodexConnector(config)` (readonly refs) |
+| Svelte | `codex-connector/svelte` | `createCodexConnectorStore(config)` |
+| Solid | `codex-connector/solid` | `createCodexConnector(config)` |
+| Any | `codex-connector` | `createCodexConnector` / `createCodexConnectorController` |
+
+React example:
 
 ```tsx
 import { useCodexConnector } from 'codex-connector/react'
@@ -98,12 +140,57 @@ const ConnectButton = () => {
 
 `setup.desktopDeepLink` opens the prompt prefilled in the ChatGPT desktop app.
 `setup.prompt` is the copy-paste fallback, and `setup.cliCommand` is a
-single-quoted one-liner for terminal users. Bring your own UI — the hook only
-carries state.
+single-quoted one-liner for terminal users. Bring your own UI — bindings only
+carry state.
 
-There is no React requirement: `createCodexConnector` works in any framework.
+### CLI fallback (no adapter)
 
-### 4. Run a turn
+For frameworks without a first-class adapter, or custom static hosting:
+
+```bash
+bunx codex-connector eject --out public/codex
+# prints the SHA-256 — optional when using the default path + BUNDLED_BRIDGE_SHA256
+```
+
+```ts
+import { BUNDLED_BRIDGE_SHA256, createCodexConnector } from 'codex-connector'
+
+export const codex = createCodexConnector({
+  serviceId: 'acme-studio',
+  appName: 'Acme Studio',
+  // Default path is /codex/codex-connector-bridge.mjs; bundled digest applies
+  // automatically. Pass bridgeSha256 only for a custom/forked bridge file.
+  bridgeSha256: BUNDLED_BRIDGE_SHA256,
+})
+```
+
+### Other frameworks (recipes)
+
+Tested recipes (Vite or Angular assets + CLI eject where needed) live under
+[`docs/recipes/`](docs/recipes/):
+
+- [Astro 7](docs/recipes/astro.md)
+- [SvelteKit 2](docs/recipes/sveltekit.md)
+- [React Router 8](docs/recipes/react-router.md)
+- [SolidStart 2](docs/recipes/solid-start.md)
+- [Qwik 1](docs/recipes/qwik.md)
+- [Angular 22](docs/recipes/angular.md)
+
+## Complete example apps
+
+The Vite/React demo in [`example/`](example/) and the native apps under
+[`examples/`](examples/) implement the same end-to-end sticky-note board:
+
+- Next.js + React
+- Nuxt + Vue
+- SvelteKit + Svelte
+- SolidStart + Solid
+
+Each is independently installable and has a fixed loopback dev port, so you can
+compare adapter and binding setup without losing functionality between
+frameworks.
+
+## Run a turn
 
 ```ts
 const models = await codex.listModels()
@@ -203,14 +290,39 @@ Read [SECURITY.md](SECURITY.md) before shipping. In short: the bridge binds
 allowlists seven RPC methods, forces an empty read-only workspace with approvals
 and network access off, and never reads or forwards ChatGPT credentials.
 
+Integrity uses the bundled digest (`BUNDLED_BRIDGE_SHA256`) or an adapter inject.
 Your app needs HTTPS to pair (loopback origins are allowed for local dev).
+
+## Compatibility
+
+Tested matrix (see `bun run test:compat` and
+[`.github/workflows/compat.yml`](.github/workflows/compat.yml)). Each entry is
+installed in an isolated consumer project from the packed npm tarball; adapters
+and recipe frameworks also produce a real production build:
+
+| Layer | Versions |
+| --- | --- |
+| Vite | 7, 8 |
+| Next.js | 15, 16 |
+| Nuxt | 3, 4 |
+| React | 18, 19 |
+| Svelte | 4, 5 |
+| Vue | 3 |
+| Solid | 1 |
+
+Recipe majors: Astro 7, SvelteKit 2, React Router 8, SolidStart 2, Qwik 1,
+Angular 22.
 
 ## API
 
 - `createCodexConnector(config)` → `getConnection`, `createSetup`, `getSetup`,
   `checkConnection`, `disconnect`, `listModels`, `run`
-- `useCodexConnector(config)` from `codex-connector/react`
-- `codexConnector(options)` from `codex-connector/vite`
+- `createCodexConnectorController(config)` — framework-neutral reactive store
+- `BUNDLED_BRIDGE_SHA256`, `resolveBridgeConfig(input?)`
+- Bindings: `codex-connector/react|vue|svelte|solid`
+- Adapters: `codexConnector()` / `withCodexConnector()` /
+  `modules: ['codex-connector/nuxt']`
+- CLI: `bunx codex-connector eject|hash`
 - Lower level: `CodexConnectorClient`, `runCodexTurn`, `listCodexModels`,
   `readCodexAccount`, `buildSetupPrompt`, `buildDesktopDeepLink`, `buildCliCommand`
 

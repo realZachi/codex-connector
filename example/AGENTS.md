@@ -25,6 +25,9 @@ Requires Codex CLI logged in with ChatGPT on the machine exercising Connect.
   `../src/vite`.
 - Aliases: `codex-connector` → `../src/index.ts`,
   `codex-connector/react` → `../src/react/index.ts`.
+- App code only passes `serviceId` + `appName`. Bridge path and SHA-256 come from
+  the Vite plugin inject / `resolveBridgeConfig` (no manual
+  `bridgeSha256: __CODEX_BRIDGE_SHA256__` in the demo).
 - Server **must** stay on loopback (`host: '127.0.0.1'`) — pairing rejects plain
   non-loopback HTTP. Changing host/port invalidates existing pairings.
 
@@ -34,8 +37,8 @@ Requires Codex CLI logged in with ChatGPT on the machine exercising Connect.
   (`status`, `setup`, deep link, copy prompt, check connection).
 - DO: Demonstrate browser tools that touch app state (`board.ts` + tool defs in
   `App.tsx`), matching the README `run({ tools })` story.
-- DO: Pass `__CODEX_BRIDGE_SHA256__` through when wiring the connector (via the
-  Vite define from the plugin).
+- DO: Rely on the adapter for integrity; only pass explicit `bridgePath` /
+  `bridgeSha256` when testing a custom bridge.
 - DON'T: Point the example at a third-party bridge URL.
 - DON'T: Switch `server.host` to `0.0.0.0` or a LAN hostname if you still expect
   pairing to work without HTTPS.
@@ -46,7 +49,7 @@ Requires Codex CLI logged in with ChatGPT on the machine exercising Connect.
 - Hook usage: `src/App.tsx`
 - Connect UI: `src/ConnectPanel.tsx`
 - Sample tool state: `src/board.ts`
-- Env typings for define: `src/env.d.ts`
+- Env typings for optional plugin defines: `src/env.d.ts`
 
 ## JIT Index Hints
 

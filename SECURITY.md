@@ -63,6 +63,47 @@ afterwards, so your app's prompts do not accumulate in the user's Codex history.
 it, which turns a wrong URL or a tampered response into a hard stop. The prompt
 also tells the agent to read the file first and never to pipe it into a shell.
 
+### Bundled digest
+
+The published package includes `BUNDLED_BRIDGE_SHA256`: the SHA-256 of
+`bridge/codex-connector-bridge.mjs` at publish time. `bun run check` verifies that
+this generated constant still matches the packaged bridge file (generate with
+`bun run generate:bridge-metadata` after intentional bridge edits).
+
+When the resolved bridge path is the default
+(`/codex/codex-connector-bridge.mjs`) and no adapter or config hash is present,
+the browser core uses `BUNDLED_BRIDGE_SHA256` so the setup prompt still contains
+an integrity check without a manual constant in app code.
+
+### Adapter path and digest resolution
+
+Official adapters (`codex-connector/vite`, `/next`, `/nuxt`) serve the packaged
+bridge from the app origin and inject `__CODEX_BRIDGE_PATH__` /
+`__CODEX_BRIDGE_SHA256__` (bundler define or equivalent runtime install).
+
+`resolveBridgeConfig` applies a fixed priority:
+
+1. Explicit `CodexConnectorConfig.bridgePath` / `bridgeSha256` (always wins).
+2. Adapter-injected path and digest.
+3. Default path plus `BUNDLED_BRIDGE_SHA256`.
+
+Adapters must never load the bridge from a third-party CDN or foreign origin.
+Relative or external `base` / `basePath` / `assetPrefix` values that would force
+a cross-origin bridge URL are rejected; pass an explicit same-origin path instead.
+
+### Custom bridges
+
+- Forking or editing the bridge file means you must serve that exact bytes and
+  pass the matching `bridgeSha256` (or re-run `eject` / `hash`).
+- An explicit custom `bridgePath` **without** `bridgeSha256` keeps the historical
+  manual-review prompt (read the file; no checksum step). Prefer supplying a
+  digest.
+- For the unmodified packaged bridge at a non-default path, you may pass
+  `bridgeSha256: BUNDLED_BRIDGE_SHA256` explicitly.
+- Do not widen the RPC allowlist, relax sandbox overwrites, skip origin checks,
+  or accept pairing tokens from query/argv in documentation or forks intended for
+  production use. Prefer `--pairing-token-stdin`.
+
 ## Residual risks
 
 Be honest with your users about these.

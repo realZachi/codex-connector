@@ -1,0 +1,23 @@
+{
+  "name": "codex-connector-example-next",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "connector:build": "bun run --cwd ../.. build",
+    "dev": "bun run connector:build && next dev --hostname 127.0.0.1 --port 4181",
+    "build": "bun run connector:build && next build",
+    "start": "next start --hostname 127.0.0.1 --port 4181"
+  },
+  "dependencies": {
+    "codex-connector": "file:../..",
+    "next": "16.3.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "codex-connector-example-solid-start",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --host 127.0.0.1 --port 4184 --strictPort",
+    "build": "vite build",
+    "start": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@solidjs/start": "2.0.0",
+    "nitro": "3.0.0",
+    "solid-js": "1.9.14",
+    "vite": "8.2.1"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3"
+  }
+}
