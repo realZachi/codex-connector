@@ -13,6 +13,10 @@ Your users already pay for ChatGPT. If they have [Codex](https://openai.com/code
 bun add codex-connector   # or npm / pnpm / yarn
 ```
 
+![Codex Connector Studio demo showing a user connecting their ChatGPT plan and using Codex inside a web app](.github/assets/codex-connector-demo.gif)
+
+_The complete user flow: pair a ChatGPT plan, verify the local bridge, and let Codex act on live browser state._
+
 ---
 
 ## Why this exists
