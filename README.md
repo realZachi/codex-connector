@@ -1,24 +1,46 @@
 # codex-connector
 
-Let your users bring their own ChatGPT plan to your web app.
+**Let your users bring their own ChatGPT plan to your web app.**
 
-Your users already pay for ChatGPT. If they have Codex installed, this package lets
-them use that subscription inside your website — no API key, no proxy, no AI cost
-on your side, and no prompt or user data passing through your servers.
+Your users already pay for ChatGPT. If they have [Codex](https://openai.com/codex) installed, this package lets them use that subscription inside your website — no API key, no proxy, no AI cost on your side, and no prompt or user data passing through your servers.
+
+[![npm](https://img.shields.io/npm/v/codex-connector?style=flat-square)](https://www.npmjs.com/package/codex-connector)
+[![license](https://img.shields.io/npm/l/codex-connector?style=flat-square)](LICENSE)
+[![node](https://img.shields.io/node/v/codex-connector?style=flat-square)](package.json)
+[![compat](https://img.shields.io/github/actions/workflow/status/realZachi/codex-connector/compat.yml?branch=main&label=compat&style=flat-square)](https://github.com/realZachi/codex-connector/actions/workflows/compat.yml)
 
 ```bash
-bun add codex-connector   # or npm / pnpm
+bun add codex-connector   # or npm / pnpm / yarn
 ```
 
-With a first-class adapter you only configure `serviceId` and `appName`. Bridge
-path and SHA-256 are injected automatically.
+---
+
+## Why this exists
+
+Most “AI in the browser” setups mean **you** hold the API key and pay for every turn. That gets expensive, leaks prompts through your backend, and forces users onto *your* billing.
+
+**codex-connector flips the model:** the user connects their own ChatGPT + Codex setup. You ship product UI and tools; they bring the model access.
+
+| You get | Users keep |
+| --- | --- |
+| Zero AI API cost | Their ChatGPT subscription |
+| No keys or proxy to operate | Auth on their machine |
+| Tools that run in *your* app state | Full control over when to connect |
+| Prompt traffic that never hits your servers | Credentials that never leave Codex |
+
+## Features
+
+- **BYO plan, not BYO key** — users pair once; no secrets pasted into your site
+- **Restricted localhost bridge** — loopback-only, origin-bound, token-authenticated RPC allowlist
+- **First-class adapters** — Vite, Next.js, Nuxt inject bridge path + integrity hash
+- **UI bindings** — React, Vue, Svelte, Solid hooks/stores on a shared controller
+- **Browser-side tools** — call app state directly; Codex gets no shell, FS, or network via the connector
+- **Framework recipes** — Astro, SvelteKit, React Router, SolidStart, Qwik, Angular
+- **Security-first defaults** — empty read-only workspace, approvals off network, forced sandbox (see [SECURITY.md](SECURITY.md))
 
 ## How it works
 
-The Codex CLI ships a local **App Server** that speaks JSON-RPC and owns the
-user's ChatGPT authentication. Browsers cannot talk to it directly, so this
-package ships a small **bridge**: a loopback HTTP server the user starts once,
-paired to your origin only.
+The Codex CLI ships a local **App Server** (JSON-RPC + the user’s ChatGPT auth). Browsers cannot talk to it directly, so this package ships a small **bridge**: a loopback HTTP server the user starts once, paired to **your origin only**.
 
 ```
 your website  ──HTTPS──▶  (nothing AI-related on your server)
@@ -27,13 +49,13 @@ your website  ──HTTPS──▶  (nothing AI-related on your server)
                              (user's own machine)
 ```
 
-The user never copies a token into your site. They run one prompt in ChatGPT,
-Codex sets the bridge up, and they come back and click *Check connection*.
+The user never copies a token into your site. They run one prompt in ChatGPT, Codex sets the bridge up, and they come back and click *Check connection*.
+
+With a first-class adapter you only configure `serviceId` and `appName`. Bridge path and SHA-256 are injected automatically.
 
 ## Quickstarts
 
-Pick your bundler, then a UI binding. Every adapter serves the bridge from **your**
-origin and wires integrity into the browser core.
+Pick your bundler, then a UI binding. Every adapter serves the bridge from **your** origin and wires integrity into the browser core.
 
 ### Vite
 
@@ -190,6 +212,10 @@ Each is independently installable and has a fixed loopback dev port, so you can
 compare adapter and binding setup without losing functionality between
 frameworks.
 
+```bash
+cd example && bun install && bun run dev   # http://127.0.0.1:4180
+```
+
 ## Run a turn
 
 ```ts
@@ -328,4 +354,4 @@ Angular 22.
 
 ## License
 
-MIT
+[MIT](LICENSE)
