@@ -1,5 +1,5 @@
-import { CodexConnectorClient } from './client'
-import type { CodexConnection } from './connection'
+import { CodexConnectorClient } from './client.js'
+import type { CodexConnection } from './connection.js'
 
 export type CodexAccount =
   | { status: 'connected'; email: string | null; planType: string }

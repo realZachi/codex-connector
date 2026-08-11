@@ -1,11 +1,13 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useSyncExternalStore } from 'react'
 import {
-  createCodexConnector,
-  type CodexConnector,
-  type CodexConnectorConfig,
-  type ConnectorStatus,
-  type SetupInstructions,
-} from '../connector'
+  createCodexConnectorController,
+} from '../controller.js'
+import type {
+  CodexConnector,
+  CodexConnectorConfig,
+  ConnectorStatus,
+  SetupInstructions,
+} from '../connector.js'
 
 export type UseCodexConnectorResult = {
   connector: CodexConnector
@@ -32,8 +34,8 @@ export const useCodexConnector = (config: CodexConnectorConfig): UseCodexConnect
     bridgeSha256,
     extraInstructions,
   } = config
-  const connector = useMemo(
-    () => createCodexConnector({
+  const controller = useMemo(
+    () => createCodexConnectorController({
       serviceId,
       appName,
       ...(appOrigin ? { appOrigin } : {}),
@@ -44,61 +46,21 @@ export const useCodexConnector = (config: CodexConnectorConfig): UseCodexConnect
     [serviceId, appName, appOrigin, bridgePath, bridgeSha256, extraInstructions],
   )
 
-  const [setup, setSetup] = useState<SetupInstructions | null>(() => connector.getSetup())
-  const [status, setStatus] = useState<ConnectorStatus | { state: 'checking' }>(
-    () => connector.getConnection() ? { state: 'checking' } : { state: 'notPaired' },
+  const snapshot = useSyncExternalStore(
+    controller.subscribe,
+    controller.getSnapshot,
+    controller.getServerSnapshot,
   )
-  const revisionRef = useRef(0)
-
-  const checkConnection = useCallback(async () => {
-    const revision = revisionRef.current + 1
-    revisionRef.current = revision
-    if (!connector.getConnection()) {
-      setStatus({ state: 'notPaired' })
-      return
-    }
-    setStatus({ state: 'checking' })
-    const next = await connector.checkConnection()
-    if (revisionRef.current === revision) setStatus(next)
-  }, [connector])
-
-  const createSetup = useCallback((options?: { rotateToken?: boolean }) => {
-    revisionRef.current += 1
-    const instructions = connector.createSetup(options)
-    setSetup(instructions)
-    setStatus({
-      state: 'offline',
-      message: 'Run the setup prompt in ChatGPT, then check the connection.',
-    })
-    return instructions
-  }, [connector])
-
-  const disconnect = useCallback(() => {
-    revisionRef.current += 1
-    connector.disconnect()
-    setSetup(null)
-    setStatus({ state: 'notPaired' })
-  }, [connector])
-
-  useEffect(() => {
-    setSetup(connector.getSetup())
-    if (!connector.getConnection()) {
-      setStatus({ state: 'notPaired' })
-      return
-    }
-    const timeout = setTimeout(() => void checkConnection(), 0)
-    return () => clearTimeout(timeout)
-  }, [connector, checkConnection])
 
   return {
-    connector,
-    status,
-    isConnected: status.state === 'connected',
-    isChecking: status.state === 'checking',
-    setup,
-    createSetup,
-    checkConnection,
-    disconnect,
+    connector: controller.connector,
+    status: snapshot.status,
+    isConnected: snapshot.isConnected,
+    isChecking: snapshot.isChecking,
+    setup: snapshot.setup,
+    createSetup: controller.createSetup,
+    checkConnection: controller.checkConnection,
+    disconnect: controller.disconnect,
   }
 }
 
@@ -107,4 +69,4 @@ export type {
   CodexConnectorConfig,
   ConnectorStatus,
   SetupInstructions,
-} from '../connector'
+} from '../connector.js'

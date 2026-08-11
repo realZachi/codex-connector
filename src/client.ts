@@ -1,5 +1,5 @@
-import { CONNECTOR_PROTOCOL_VERSION, bridgeOrigin, serviceCandidatePorts } from './service'
-import type { CodexConnection } from './connection'
+import { CONNECTOR_PROTOCOL_VERSION, bridgeOrigin, serviceCandidatePorts } from './service.js'
+import type { CodexConnection } from './connection.js'
 
 export type BridgeStatus = {
   bridgeVersion: number
@@ -12,7 +12,10 @@ export type BridgeStatus = {
 
 export type RpcMessage = Record<string, unknown>
 export type RpcMessageListener = (message: RpcMessage) => void
-export type Fetcher = typeof fetch
+export type Fetcher = (
+  input: RequestInfo | URL,
+  init?: RequestInit,
+) => Promise<Response>
 
 type PendingRequest = {
   resolve: (value: unknown) => void

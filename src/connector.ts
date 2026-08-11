@@ -1,20 +1,21 @@
-import { accountErrorMessage, readCodexAccount, type CodexAccount } from './account'
+import { accountErrorMessage, readCodexAccount, type CodexAccount } from './account.js'
+import { resolveBridgeConfig } from './bridge-resolve.js'
 import {
   createConnection,
   readConnection,
   removeConnection,
   writeConnection,
   type CodexConnection,
-} from './connection'
-import { listCodexModels, type CodexModel } from './models'
-import { runCodexTurn, type CodexRunResult, type RunCodexTurnOptions } from './run'
-import { assertValidServiceId } from './service'
+} from './connection.js'
+import { listCodexModels, type CodexModel } from './models.js'
+import { runCodexTurn, type CodexRunResult, type RunCodexTurnOptions } from './run.js'
+import { assertValidServiceId } from './service.js'
 import {
   DEFAULT_BRIDGE_PATH,
   buildCliCommand,
   buildDesktopDeepLink,
   buildSetupPrompt,
-} from './setup-prompt'
+} from './setup-prompt.js'
 
 export type CodexConnectorConfig = {
   /** Stable id for your app; scopes the port, config directory and storage. */
@@ -101,13 +102,23 @@ export type CodexConnector = {
 export const createCodexConnector = (config: CodexConnectorConfig): CodexConnector => {
   const serviceId = assertValidServiceId(config.serviceId)
   const appName = config.appName.trim() || serviceId
-  const promptOptions = (connection: CodexConnection) => ({
-    connection,
-    appName,
-    ...(config.bridgePath ? { bridgePath: config.bridgePath } : {}),
-    ...(config.bridgeSha256 ? { bridgeSha256: config.bridgeSha256 } : {}),
-    ...(config.extraInstructions ? { extraInstructions: config.extraInstructions } : {}),
-  })
+  const bridgeInput = {
+    ...(config.bridgePath !== undefined ? { bridgePath: config.bridgePath } : {}),
+    ...(config.bridgeSha256 !== undefined ? { bridgeSha256: config.bridgeSha256 } : {}),
+  }
+  const promptOptions = (connection: CodexConnection) => {
+    // Nuxt installs its adapter values from a client plugin. Resolve lazily so
+    // connectors created while modules are evaluated still see those values by
+    // the time the user opens the setup flow.
+    const bridge = resolveBridgeConfig(bridgeInput)
+    return {
+      connection,
+      appName,
+      bridgePath: bridge.bridgePath,
+      ...(bridge.bridgeSha256 ? { bridgeSha256: bridge.bridgeSha256 } : {}),
+      ...(config.extraInstructions ? { extraInstructions: config.extraInstructions } : {}),
+    }
+  }
 
   const toSetup = (connection: CodexConnection): SetupInstructions => {
     const options = promptOptions(connection)

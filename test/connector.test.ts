@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createCodexConnector } from '../src/connector'
 import { connectionStorageKey, readConnection } from '../src/connection'
 import { serviceCandidatePorts } from '../src/service'
@@ -31,7 +31,10 @@ describe('createCodexConnector', () => {
   let entries: Map<string, string>
 
   beforeEach(() => { entries = installLocalStorage() })
-  afterEach(() => { Reflect.deleteProperty(globalThis, 'localStorage') })
+  afterEach(() => {
+    Reflect.deleteProperty(globalThis, 'localStorage')
+    vi.unstubAllGlobals()
+  })
 
   it('rejects an unusable service id', () => {
     expect(() => createCodexConnector({ ...config, serviceId: 'Acme Studio' })).toThrow(/serviceId/)
@@ -103,5 +106,16 @@ describe('createCodexConnector', () => {
     }).createSetup()
     expect(setup.prompt).toContain('https://acme.example/static/bridge.mjs')
     expect(setup.prompt).toContain('a'.repeat(64))
+  })
+
+  it('resolves runtime adapter globals lazily when setup is created', () => {
+    const connector = createCodexConnector(config)
+
+    vi.stubGlobal('__CODEX_BRIDGE_PATH__', '/late/codex-connector-bridge.mjs')
+    vi.stubGlobal('__CODEX_BRIDGE_SHA256__', 'b'.repeat(64))
+
+    const setup = connector.createSetup()
+    expect(setup.prompt).toContain('https://acme.example/late/codex-connector-bridge.mjs')
+    expect(setup.prompt).toContain('b'.repeat(64))
   })
 })

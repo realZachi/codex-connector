@@ -2,7 +2,7 @@ import {
   CONNECTOR_PROTOCOL_VERSION,
   assertValidServiceId,
   isValidServiceId,
-} from './service'
+} from './service.js'
 
 const PAIRING_TOKEN_BYTES = 32
 const PAIRING_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/

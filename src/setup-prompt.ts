@@ -1,5 +1,5 @@
-import { serviceCandidatePorts } from './service'
-import type { CodexConnection } from './connection'
+import { serviceCandidatePorts } from './service.js'
+import type { CodexConnection } from './connection.js'
 
 export const DEFAULT_BRIDGE_PATH = '/codex/codex-connector-bridge.mjs'
 

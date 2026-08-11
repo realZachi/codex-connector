@@ -1,5 +1,5 @@
-import { CodexConnectorClient, type Fetcher } from './client'
-import type { CodexConnection } from './connection'
+import { CodexConnectorClient, type Fetcher } from './client.js'
+import type { CodexConnection } from './connection.js'
 
 export type CodexModel = {
   id: string

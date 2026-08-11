@@ -23,7 +23,10 @@ export type ToolExecutionContext = {
   signal: AbortSignal | undefined
 }
 
-export type ConnectorToolSet = Record<string, ConnectorTool<never>>
+// A set is intentionally heterogeneous: every entry may parse a different
+// input shape. `any` is the existential boundary here; each individual
+// ConnectorTool<Input> remains fully typed for consumers.
+export type ConnectorToolSet = Record<string, ConnectorTool<any>>
 
 const TOOL_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_-]{0,63}$/
 
@@ -127,7 +130,7 @@ export const executeTool = async (options: {
   signal?: AbortSignal
 }): Promise<ToolCallResponse> => {
   const { request, tools } = options
-  const tool: ConnectorTool<never> | undefined = Object.hasOwn(tools, request.toolName)
+  const tool: ConnectorTool<any> | undefined = Object.hasOwn(tools, request.toolName)
     ? tools[request.toolName]
     : undefined
   if (!tool) return serializeToolFailure(new Error(`Unknown tool: ${request.toolName}`))

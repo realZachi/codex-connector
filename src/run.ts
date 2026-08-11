@@ -1,7 +1,7 @@
-import { accountErrorMessage, parseAccount, type CodexAccount } from './account'
-import { CodexConnectorClient, type RpcMessage } from './client'
-import { buildDynamicToolSpecs, executeTool, parseToolCallRequest, type ConnectorToolSet, type ToolCallRequest } from './tools'
-import type { CodexConnection } from './connection'
+import { accountErrorMessage, parseAccount, type CodexAccount } from './account.js'
+import { CodexConnectorClient, type RpcMessage } from './client.js'
+import { buildDynamicToolSpecs, executeTool, parseToolCallRequest, type ConnectorToolSet, type ToolCallRequest } from './tools.js'
+import type { CodexConnection } from './connection.js'
 
 export type CodexRunInput =
   | { type: 'text'; text: string }
