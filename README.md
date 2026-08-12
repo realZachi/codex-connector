@@ -17,6 +17,8 @@ bun add codex-connector   # or npm / pnpm / yarn
 
 _The complete user flow: pair a ChatGPT plan, verify the local bridge, and let Codex act on live browser state._
 
+**[Try the live demo →](https://realzachi.github.io/codex-connector-studio/)**
+
 ---
 
 ## Why this exists
