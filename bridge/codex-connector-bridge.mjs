@@ -218,6 +218,7 @@ export const restrictRpcMessage = (message, workspacePath, serviceName) => {
         approvalPolicy: 'never',
         cwd: workspacePath,
         environments: [],
+        ephemeral: true,
         sandbox: 'read-only',
         serviceName,
       },

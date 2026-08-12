@@ -64,12 +64,18 @@ describe('bridge RPC restriction', () => {
     const message = restrict({
       id: 1,
       method: 'thread/start',
-      params: { cwd: '/Users/someone', sandbox: 'danger-full-access', approvalPolicy: 'never' },
+      params: {
+        cwd: '/Users/someone',
+        ephemeral: false,
+        sandbox: 'danger-full-access',
+        approvalPolicy: 'never',
+      },
     })
     expect(message?.params).toMatchObject({
       approvalPolicy: 'never',
       cwd: '/tmp/workspace',
       environments: [],
+      ephemeral: true,
       sandbox: 'read-only',
       serviceName: 'Acme Studio',
     })

@@ -55,8 +55,9 @@ browser refuse a bridge belonging to another app.
 `/v1/hello`, which returns only a service id and protocol version. The pairing
 token is sent only after a bridge identifies itself as the matching service.
 
-**Ephemeral threads.** Runs use `ephemeral: true` and the thread is deleted
-afterwards, so your app's prompts do not accumulate in the user's Codex history.
+**Ephemeral threads.** The bridge overwrites `thread/start` with
+`ephemeral: true`, and the client deletes the thread afterwards, so a custom or
+compromised client cannot leave app prompts in the user's Codex history.
 
 **Supply chain.** The bridge is served from your origin over HTTPS. Pass
 `bridgeSha256` and the setup prompt makes Codex verify the checksum before running
